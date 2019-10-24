@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwill.mappers.tableColumnMappingMapper">
+	<select id="getInfoBeanData" resultType="com.itwill.domain.TableColumnMappingBean">
+		SELECT
+			*
+		FROM
+			table_column_mapping
+		WHERE
+			1=1
+		<if test="seq != 0">
+ 	        AND seq =  #{seq}
+ 	    </if>
+ 	    <if test="board_id != null">
+ 	        AND board_id =  #{board_id}
+ 	    </if>
+ 	    
+ 	    ORDER BY seq ASC
+
+	</select>
+	<insert id="foreachInsert" parameterType="java.util.HashMap">
+	<if test="dataList.size != 0">
+        insert into table_column_mapping(
+            board_id
+			, column_code
+			, board_name_kr
+			, column_type
+			, information
+			, board_column_use
+			, regi_id
+			, regi_date
+			, regi_ip_addr
+        )values
+        <foreach collection="dataList" item="item" separator=",">
+        (
+            #{board_id}
+			, #{item.column_code}
+			, #{item.board_name_kr}
+			, #{item.column_type}
+			, #{item.information}
+			, #{item.board_column_use}
+			, #{regi_id}
+			, now()
+			, #{regi_ip_addr}
+        )
+        </foreach>
+    </if>
+	
+	</insert>
+	
+	
+	
+	
+	
+	<insert id="setInsert">
+		insert into table_column_mapping(
+			seq
+			, board_id
+			, column_code
+			, board_name_kr
+			, column_type
+			, information
+			, board_column_use
+			, regi_id
+			, regi_date
+			, regi_ip_addr
+		)
+		values(
+			<choose>
+				<when test="seq != 0">
+					#{seq}
+				</when>
+				<otherwise>
+					null
+				</otherwise>
+			</choose>
+			, #{board_id}
+			, #{column_code}
+			, #{board_name_kr}
+			, #{column_type}
+			, #{information}
+			, #{board_column_use}
+			, #{regi_id}
+			, now()
+			, #{regi_ip_addr}
+			)
+		on duplicate key update
+			board_name_kr = #{board_name_kr}
+			, column_type = #{column_type}
+			, information = #{information}
+			, board_column_use = #{board_column_use}
+			, modifier_id = #{modifier_id}
+			, modifier_date = now()
+			, modifier_ip_addr = #{modifier_ip_addr}
+	</insert>
+	
+	<update id="update">
+		update table_column_mapping
+		set
+			board_name_kr = #{board_name_kr}
+			, column_type = #{column_type}
+			, information = #{information}
+			, board_column_use = #{board_column_use}
+			, modifier_id = #{modifier_id}
+			, modifier_date = now()
+			, modifier_ip_addr = #{modifier_ip_addr}
+		where
+			seq = #{seq}
+	</update>
+	<delete id="setDelete">
+		delete 
+		from 
+			board_setting
+		where
+			seq = #{seq}
+	</delete>
+    
+    <resultMap type="map" id="listMap" ></resultMap>
+	
+	
+
+
+</mapper> 
+

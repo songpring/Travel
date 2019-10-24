@@ -1,0 +1,75 @@
+부럽다
+
+111
+														<회원가입>
+
+sequence(번호)	column name	컬럼 한글명	컬럼 타입	컬럼 설명
+1	member_id	아이디	varchar(20) PK	
+2	member_pw	비밀번호	varchar(20) NN	
+3	member_name	이름	varchar(50) NN	
+4	member_eng_name	영문이름	varchar(50) NN	
+5	member_nickname	닉네임	varchar(30) NN	
+6	member_birth	생년월일	Date NN	
+7	member_email	이메일	varchar(50) NN, UN	
+8	member_phone	전화번호	varchar(14) NN, UN	
+9	member_gender	성별	varchar(1) NN	
+10	member_date	가입일	Date NN	
+11	passport_number	여권번호	varchar(30) NN	
+12	postal_code	우편번호	varchar(30) NN	
+13	address1	주소 1	varchar(50) NN	기본 주소
+14	address2	주소 2	varchar(50) NN	상세 주소
+15	profile_photo	프로필사진	varchar(30) NN	
+16	self_introduction	자기소개	varchar(300) NN	
+				
+TABLE member				
+
+
+	
+														<멤버>
+
+sequence(번호)	column name	컬럼 한글명	컬럼 타입	컬럼 설명
+1	member_id	아이디	varchar(20) PK	
+2	member_pw	비밀번호	varchar(20) NN	
+3	member_name	이름	varchar(50) NN	
+4	member_eng_name	영문이름	varchar(50) NN	
+5	member_nickname	닉네임	varchar(30) NN	
+6	member_birth	생년월일	Date NN	
+7	member_email	이메일	varchar(50) NN, UN	
+8	member_phone	전화번호	varchar(14) NN, UN	
+9	member_gender	성별	varchar(1) NN	
+10	member_date	가입일	Date NN	
+11	passport_number	여권번호	varchar(30) NN	
+12	postal_code	우편번호	varchar(30) NN	
+13	address1	주소 1	varchar(50) NN	기본 주소
+14	address2	주소 2	varchar(50) NN	상세 주소
+15	profile_photo	프로필사진	varchar(30) NN	
+16	self_introduction	자기소개	varchar(300) NN	
+17	member_point	보유 포인트	int NN	
+				
+TABLE member	
+
+
+
+
+														<쿠폰>
+
+TABLE coupon
+
+쿠폰 번호(coupon_code) int PK
+쿠폰 종류(coupon_type) varchar(20) NN
+쿠폰 이름(coupon_name) varchar(20) NN
+쿠폰 내용(coupon_content) varchar(100) NN
+쿠폰시작일(coupon_start_day) Date NN
+쿠폰만료일(coupon_end_day) Date NN
+등록자(coupon_registrar) varchar(20) 
+등록일(coupon_register_date) Date NN
+등록자 IP(coupon_registrar_ip) varchar(20) NN
+수정자(coupon_modifier) varchar(20) NN
+수정일(coupon_modify_date) Date NN
+수정자IP(coupon_modifier_ip) varchar(20) NN
+
+
+
+1,일반. 첫가입쿠폰,시작일~종료일
+2,행사. 추천쿠폰,시작일~종료일
+			

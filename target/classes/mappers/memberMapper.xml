@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwill.mapper.MemberMapper">
+
+	<insert id="insert">
+		insert into
+		member(id,password,name,eng_name,nickname,birth,email,phone,gender,passport_number,
+		zip_code,address1,address2,profile_photo,introduce,point,mileage,level,
+		regi_id,regi_date,regi_ip_addr,modifier_id,modifier_date,modifier_ip_addr)
+		values(#{id},#{password},#{name},#{eng_name},#{nickname},#{birth},#{email},#{phone},#{gender},#{passport_number},
+		#{zip_code},#{address1},#{address2},#{profile_photo},#{introduce},#{point},#{mileage},#{level},
+		#{id},#{regi_date},#{regi_ip_addr},#{id},#{modifier_date},#{modifier_ip_addr})
+	</insert>
+	
+	<select id="getReservationList" resultType="com.itwill.domain.AirlineBean">
+		select * from air_booking_history where id=#{id} order by seq desc
+	</select>
+	
+	<insert id="reservationCancel">
+		delete from air_booking_history where seq=#{seq}
+	</insert>
+	
+	<select id="userCheck" resultType="com.itwill.domain.MemberBean">
+		select 
+			* 
+		from 
+			member 
+		where 
+			id=#{id}
+		<if test="password != null">
+ 	        AND password =  #{password}
+ 	    </if> 
+			
+	</select>
+	
+	<select id="userInfo" resultType="com.itwill.domain.MemberBean">
+		select
+			 * 
+		from 
+			member
+		where 
+			id=#{id}
+	</select>
+	
+	<update id="updatePost">
+		update member set 
+		name=#{name}, 
+		eng_name=#{eng_name}, 
+		nickname=#{nickname}, 
+		zip_code=#{zip_code}, 
+		address1=#{address1}, 
+		address2=#{address2}, 
+		email=#{email}, 
+		phone=#{phone}, 
+		password = #{password} 
+		
+		where id=#{id}
+	</update>
+	
+	
+	<!-- 프사변경 -->
+	<update id="updateProfile">
+	update member set profile_photo = #{profile_photo} where id=#{id}
+	</update>
+	
+	
+	<!-- 아이디 중복확인 -->
+	<select id="idCheck" resultType="java.lang.Integer">
+		select 
+			count(*) 
+		from 
+			member 
+		where id=#{id}
+	</select>
+	<!-- 아이디 중복확인 -->
+	
+	<!-- 닉네임 중복확인 -->
+	<select id="nickCheck" resultType="java.lang.Integer">
+		select 
+			count(*) 
+		from 
+			member 
+		where 
+			nickname=#{nickname}
+	</select>
+	<!-- 닉네임 중복확인 -->
+
+	
+	
+	
+	<!-- 아이디 찾기 -->
+	<select id="findId">
+		select id from member where name=#{name} and email=#{email}
+	</select>
+	<!-- 아이디 찾기 -->
+	
+	
+	
+	
+	<!-- 회원탈퇴 -->
+	<delete id="deletePost">
+		delete 
+		from 
+			member 
+		where 
+			id=#{id} 
+			<!-- 2019.09.27 박용훈 패스워드가 있을때만 패스워드 할당 하도록 수정 -->
+			<!-- and password=#{password} -->
+		 <if test="password != null">
+ 	        and password = #{password}
+ 	    </if>
+	</delete>
+	<!-- 회원탈퇴 -->
+	
+	
+	<select id="getNickName" resultType="java.lang.String">
+		select 
+			nickname
+		from 
+			member 
+		where 
+			id=#{regi_id}
+	</select>
+	
+	<!-- 회원 전체 갯수 -->
+	<select id="totCount" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			member
+		where
+			1=1
+		<if test="id != null">
+ 	        AND id like CONCAT('%',#{id},'%')
+ 	    </if>
+ 	    <if test="nickname != null">
+ 	        AND nickname like CONCAT('%',#{nickname},'%')
+ 	    </if>
+ 	    
+ 	    <if test="name != null">
+ 	        AND name like CONCAT('%',#{name},'%')
+ 	    </if>	
+		
+	</select>
+	
+	<!-- 회원 조회 -->
+	<select id="selectListMap" resultMap="listMap">
+		SELECT
+			*
+		FROM
+			member
+		WHERE
+			1=1
+		<if test="id != null">
+ 	        AND id like CONCAT('%',#{id},'%')
+ 	    </if>
+ 	    <if test="nickname != null">
+ 	        AND nickname like CONCAT('%',#{nickname},'%')
+ 	    </if>
+ 	    
+ 	    <if test="name != null">
+ 	        AND name like CONCAT('%',#{name},'%')
+ 	    </if>
+ 	    
+		order by ${orderData} ${orderType}
+ 	    
+ 	    LIMIT 	${startRow}, ${endRow}
+
+	</select>
+	<resultMap type="map" id="listMap" ></resultMap>
+	
+	<insert id="insertMessage">
+		insert into member_message(
+		seq,
+		message_id,send_id,receive_id,subject,content,
+		message_type,read_use,regi_id,regi_date,regi_ip_addr
+		)
+		
+		values (
+		null,
+		#{message_id},#{send_id},#{receive_id},#{subject},#{content},
+		#{message_type},#{read_use},#{regi_id}, now(),#{regi_ip_addr}
+		)
+
+	</insert>
+	<!-- 쪽지 제거 -->
+	<delete id="deleteMessage">
+<!-- 		delete from coupon where id=#{id} and password=#{password}; -->
+<!-- 체크하면 그 줄이 삭제되게끔하기....ㅜㅜ,아니면 줄 선택시 바로 삭제.. -->
+	</delete>
+	<!-- 쪽지 제거 -->
+	
+	<insert id="setInsert">
+		insert into member(
+			id 
+			, password 
+			, name 
+			, eng_name 
+			, nickname 
+			, birth 
+			, email 
+			, phone 
+			, gender 
+			, passport_number 
+			, zip_code 
+			, address1 
+			, address2 
+			, profile_photo 
+			, introduce 
+			, point 
+			, mileage 
+			, level 
+			, regi_id 
+			, regi_date 
+			, regi_ip_addr 
+		)
+		values(
+			#{id} 
+			, #{password} 
+			, #{name} 
+			, #{eng_name} 
+			, #{nickname} 
+			, #{birth} 
+			, #{email} 
+			, #{phone} 
+			, #{gender} 
+			, #{passport_number} 
+			, #{zip_code} 
+			, #{address1} 
+			, #{address2} 
+			, #{profile_photo} 
+			, #{introduce}
+			, #{point} 
+			, #{mileage} 
+			, #{level} 
+			, #{regi_id} 
+			, now() 
+			, #{regi_ip_addr} 
+			)
+		on duplicate key update
+			password = #{password}
+		<if test="name != null">
+ 	        , name = #{name}
+ 	    </if> 
+ 	    <if test="eng_name != null">
+ 	        , eng_name = #{eng_name}
+ 	    </if>
+ 	    <if test="nickname != null">
+ 	        , nickname = #{nickname}
+ 	    </if>
+ 	    <if test="birth != null">
+ 	        , birth = #{birth}
+ 	    </if>
+ 	    <if test="email != null">
+ 	        , email = #{email}
+ 	    </if>
+ 	    <if test="phone != null">
+ 	        , phone = #{phone}
+ 	    </if>
+ 	    <if test="gender != null">
+ 	        , gender = #{gender}
+ 	    </if>
+ 	    <if test="passport_number != null">
+ 	        , passport_number = #{passport_number}
+ 	    </if>
+ 	    <if test="zip_code != null">
+ 	        , zip_code = #{zip_code}
+ 	    </if>
+ 	    <if test="address1 != null">
+ 	        , address1 = #{address1}
+ 	    </if>
+ 	    <if test="address2 != null">
+ 	        , address2 = #{address2}
+ 	    </if>
+ 	    <if test="introduce != null">
+ 	        , introduce = #{introduce}
+ 	    </if>
+ 	    <if test="point != 0">
+ 	        , point = #{point}
+ 	    </if>
+ 	    <if test="mileage != 0">
+ 	        , mileage = #{mileage}
+ 	    </if>
+ 	    <if test="level != 0">
+ 	        , level = #{level}
+ 	    </if>
+			, modifier_id = #{modifier_id}
+			, modifier_date = now()
+			, modifier_ip_addr = #{modifier_ip_addr}
+	</insert>
+	<select id="userInfoBean" resultType="com.itwill.domain.MemberBean">
+		select
+			 * 
+		from 
+			member
+		where 
+			id=#{id}
+		<if test="password != null">
+ 	        AND password =  #{password}
+ 	    </if>
+			
+	</select>
+	
+	
+	
+	
+		<!-- 구독자 이메일 저장 -->
+	<insert id="subscribe">
+		insert into subscriber values(null, #{email}, now())
+	</insert>
+	
+	<select id="subscriberCheck" resultType="Integer">
+		select count(*) from member, subscriber  where member.email=#{tomail} or subscriber.email = #{tomail}
+	</select>
+	
+	<delete id="deleteSubscriber">
+		delete from subscriber where email=#{email}
+	</delete>
+	
+	
+	<insert id="sendMessage">
+		insert into member_message 
+		values(null, null, #{receive_id}, #{send_id}, #{subject}, #{content}, #{message_type}, #{read_use}, #{regi_id}, now(), #{regi_ip_addr})
+	</insert>
+	
+	<select id="getName" resultType="java.lang.String">
+		select
+			id
+		from 
+			member
+		where
+			nickname = #{nickname}
+	</select>
+	<select id="getMsgList" resultType="com.itwill.domain.MessageBean">
+		select * from member_message where receive_id=#{id} order by seq asc
+	</select>
+	<select id="getMemberInfoById" resultType="com.itwill.domain.MemberBean">
+		select
+			*
+		from 
+			member
+		where
+			id = #{regi_id}
+	</select>
+</mapper> 

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwill.mappers.boardSettingMapper">
+	<select id="getInfoBeanData" resultType="com.itwill.domain.BoardSettingBean">
+		SELECT
+			*
+		FROM
+			board_setting
+		WHERE
+			1=1
+		<if test="seq != null">
+ 	        AND seq =  #{seq}
+ 	    </if>
+ 	    <if test="board_id != null">
+ 	        AND board_id =  #{board_id}
+ 	    </if>
+ 	    <if test="board_name != null">
+ 	        AND board_name like CONCAT('%',#{board_name},'%')
+ 	    </if>
+ 	    <if test="board_types != null">
+ 	        AND board_types =  #{board_types}
+ 	    </if>
+ 	    ORDER BY seq ASC
+
+	</select>
+	
+	<select id="totCount" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			board_setting
+		where
+			1=1
+		<if test="board_id != null">
+ 	        AND board_id like CONCAT('%',#{board_id},'%')
+ 	    </if>
+ 	    <if test="board_types != null">
+ 	        AND board_types =  #{board_types}
+ 	    </if>
+ 	    <if test="board_name != null">
+ 	        AND board_name like CONCAT('%',#{board_name},'%')
+ 	    </if>	
+		
+	</select>
+	
+	<select id="selectListMap" resultMap="listMap">
+		SELECT
+			*
+		FROM
+			board_setting
+		WHERE
+			1=1
+		<if test="board_id != null">
+ 	        AND board_id like CONCAT('%',#{board_id},'%')
+ 	    </if>
+		<if test="board_types != null">
+ 	        AND board_types =  #{board_types}
+ 	    </if>
+ 	    <if test="board_name != null">
+ 	        AND board_name like CONCAT('%',#{board_name},'%')
+ 	    </if>
+ 	    
+		order by ${orderData} ${orderType}
+ 	    
+ 	    LIMIT 	${startRow}, ${endRow}
+
+	</select>
+	
+	<insert id="setInsert">
+		insert into board_setting(
+			seq
+			, board_id
+			, board_name
+			, board_types
+			, writing_authority
+			, modification_authority
+			, delete_authority
+			, read_authority
+			, page_size
+			, pages_size
+			, notification_use
+			, file_use
+			, re_write_use
+			, comments_use
+			, regi_id
+			, regi_date
+			, regi_ip_addr
+		)
+		values(
+			<choose>
+				<when test="seq != 0">
+					#{seq}
+				</when>
+				<otherwise>
+					null
+				</otherwise>
+			</choose>
+			, #{board_id}
+			, #{board_name}
+			, #{board_types}
+			, #{writing_authority}
+			, #{modification_authority}
+			, #{delete_authority}
+			, #{read_authority}
+			, #{page_size}
+			, #{pages_size}
+			, #{notification_use}
+			, #{file_use}
+			, #{re_write_use}
+			, #{comments_use}
+			, #{regi_id}
+			, now()
+			, #{regi_ip_addr}
+			)
+		on duplicate key update
+			board_name = #{board_name}
+			, board_types = #{board_types}
+			, writing_authority = #{writing_authority}
+			, modification_authority = #{modification_authority}
+			, delete_authority = #{delete_authority}
+			, read_authority = #{read_authority}
+			, page_size = #{page_size}
+			, pages_size = #{pages_size}
+			, notification_use = #{notification_use}
+			, file_use = #{file_use}
+			, re_write_use = #{re_write_use}
+			, comments_use = #{comments_use}
+			, modifier_id = #{modifier_id}
+			, modifier_date = now()
+			, modifier_ip_addr = #{modifier_ip_addr}
+			
+	<selectKey keyProperty="seq" resultType="java.lang.Integer" order="AFTER">
+		   SELECT LAST_INSERT_ID()
+  	</selectKey>
+
+
+	</insert>
+	
+	<update id="setUpdate">
+		update board_setting
+		set
+			modifier_date = now()
+			, board_name = #{board_name}
+			, board_types = #{board_types}
+			, writing_authority = #{writing_authority}
+			, modification_authority = #{modification_authority}
+			, delete_authority = #{delete_authority}
+			, read_authority = #{read_authority}
+			, page_size = #{page_size}
+			, pages_size = #{pages_size}
+			, notification_use = #{notification_use}
+			, file_use = #{file_use}
+			, re_write_use = #{re_write_use}
+			, comments_use = #{comments_use}
+			, modifier_id = #{modifier_id}
+			, modifier_ip_addr = #{modifier_ip_addr}
+		where
+			seq = #{seq}
+	</update>
+	<delete id="setDelete">
+		delete 
+		from 
+			board_setting
+		where
+			seq = #{seq}
+	</delete>
+    
+    <resultMap type="map" id="listMap" ></resultMap>
+	
+	
+
+
+</mapper> 
+

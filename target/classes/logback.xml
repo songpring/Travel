@@ -1,0 +1,70 @@
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+            <pattern>%d{yyyyMMdd HH:mm:ss.SSS} [%thread] %-3level %logger{5} - %msg %n</pattern>
+        </encoder>
+  </appender>
+  
+  <Loggers>
+		<Logger name="java.sql" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+
+		<Logger name="jdbc.connection" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+
+        <Logger name="egovframework" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+		  <!-- log SQL with timing information, post execution -->
+		
+		<Logger name="jdbc.sqltiming" level="ERROR" additivity="false">
+	        <AppenderRef ref="console" />
+	    </Logger>
+	    
+	    <logger name="jdbc.sqlonly" level="INFO" additivity="false">  
+			<AppenderRef ref="console" />
+	    </logger>
+
+	    <logger name="jdbc.audit" level="ERROR" additivity="false">  
+			<AppenderRef ref="console" />
+	    </logger>
+	     
+	    <logger name="jdbc.resultset"  level="ERROR" additivity="false">  
+			<AppenderRef ref="console" />
+	    </logger>  
+	    
+	    <logger name="jdbc.resultsettable" level="INFO" additivity="false">  
+			<AppenderRef ref="console" />
+	    </logger>  
+	    
+	    <Logger name="org.springframework" level="ERROR" additivity="false">
+	        <AppenderRef ref="console" />
+	    </Logger>
+	    
+		<Root level="INFO">
+            <AppenderRef ref="console" />
+        </Root>
+    </Loggers>
+  
+<!--   <logger name="jdbc" level="OFF"/> -->
+<!--   <logger name="jdbc.sqlonly" level="OFF"/> -->
+<!--   <logger name="jdbc.sqltiming" level="DEBUG"/> -->
+<!--   <logger name="jdbc.audit" level="OFF"/> -->
+<!--   <logger name="jdbc.resultset" level="OFF"/> -->
+<!--   <logger name="jdbc.resultsettable" level="DEBUG"/> -->
+<!--   <logger name="jdbc.connection" level="OFF"/> -->
+  
+<!--   <root level="INFO"> -->
+<!--     <appender-ref ref="console" /> -->
+<!--   </root> -->
+</configuration>
+
+<!-- 일부 로그를 보고 싶지 않으면 level value 값을 OFF로 두면 된다. -->
+<!-- jdbc.sqlonly : SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여진다. -->
+<!-- jdbc.sqltiming : SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함한다. -->
+<!-- jdbc.audit : ResultSet을 제외한 모든 JDBC 호출 정보를 로그로 남긴다. 많은 양의 로그가 생성되므로 특별히 JDBC 문제를 추적해야 할 필요가 있는 경우를 제외하고는 사용을 권장하지 않는다. -->
+<!-- jdbc.resultset : ResultSet을 포함한 모든 JDBC 호출 정보를 로그로 남기므로 매우 방대한 양의 로그가 생성된다. -->
+<!-- jdbc.resultsettable : SQL 결과 조회된 데이터의 table을 로그로 남긴다. -->
+<!-- jdbc.connection : 열려있는 모든 번호와 연결 수립 및 해제 이벤트를 기록. 이는 연결 문제를 찾아내는데 매우 유용 (Connection Pool 설정) -->

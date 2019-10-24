@@ -1,0 +1,54 @@
+@charset "UTF-8";
+.fixed-table-container { /*테이블 고정 container width와 height는 공용으로 사용하기 위해 html단에서 지정 */ 
+    /*width: 800px;height: 200px;*/
+    position: relative;
+    padding-top: 30px; /* header-bg height값 */
+}
+.fixed-table-header-bg { /*헤더(타이틀 영역)*/
+	border-top:1px solid #3b3f2c; 
+	border-bottom:1px solid #3b3f2c;
+	text-align:center;
+	color:#666; 
+	background:#ecf5fc; 
+	font-weight:bold;
+    height: 30px; /* header-bg height값 */
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    /*border-bottom: 1px solid #000;*/
+}
+.fixed-table-wrapper {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100%;
+}
+table.fixed-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table.fixed-table td {
+    border-bottom: 1px solid #DDD;
+height:30px; padding:3px 10px 2px;
+    text-align:center;
+    color:#666;
+}
+table.fixed-table td + td {
+    border-left: 1px solid #DDD;
+}
+table.fixed-table th {
+    padding: 0px; /* reset */
+    
+}
+table.fixed-table .th-text {
+    position: absolute;
+    top: 0;
+    width: inherit;
+    line-height: 30px; /* header-bg height값 */
+    border-left:1px solid; border-color:#3b3f2c #c4c4c4;
+}
+table.fixed-table th:first-child .th-text {
+    border-left: none;
+}
+table.fixed-table tbody tr:last-child td{border-bottom:1px solid #3b3f2c;} 
+table.fixed-table tbody tr:nth-child(even) {background: #f6f6f6;}

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwill.mapper.couponMapper">
+
+	<insert id="insertCoupon">
+		insert into coupon(
+		seq,
+		coupon_type, coupon_name,coupon_content,
+		coupon_start_day,coupon_end_day,
+		regi_id,regi_date,regi_ip_addr,
+		modifier_id,modifier_date,modifier_ip_addr
+		)
+		
+		values (
+		null,
+		#{coupon_type}, #{coupon_name}, #{coupon_content}
+		<!-- , #{coupon_start_day} -->
+		, "2019-12-30 23:59:59"
+		<!-- , #{coupon_end_day} -->
+		, "2019-12-31 23:59:59"
+		, #{regi_id}, now(), #{regi_ip_addr}
+		, null, null, null
+		)
+	</insert>
+	<!-- 쿠폰 제거 -->
+	<delete id="deleteCoupon">
+<!-- 		delete from coupon where id=#{id} and password=#{password}; -->
+<!-- 체크하면 그 줄이 삭제되겠금하기....ㅜㅜ,아니면 줄 선택시 바로 삭제.. -->
+	</delete>
+	<!-- 쿠폰 제거 -->
+</mapper> 

@@ -1,0 +1,529 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE HTML>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+	<style type="text/css">
+	
+	 
+	
+	.form-field>select>option {
+	color: gray;
+	}
+	
+	</style>
+	
+	<title>최저가항공권, 동행찾기 - 위트래블</title>
+	<!-- head 들어가는 곳 -->
+	<jsp:include page="inc/intro.jsp" />
+	<!-- head 들어가는 곳 -->
+	<script src='<c:url value="/resources/assets/tour/js/common.js"/>'></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			
+			
+			var resDate = new Date();
+			resDate.setDate(resDate.getDate() + 4);
+			
+			$('#date_dep').datepicker('setStartDate',resDate);
+			$('#date_arr').datepicker('setStartDate',resDate);
+			
+			$("#date_dep").datepicker({
+				format: 'yyyy/mm/dd',
+				autoclose: true,
+			}).on('changeDate', function (selected) {
+				var startDate = new Date(selected.date.valueOf());
+				$('#date_arr').datepicker('setStartDate',startDate);
+			}).on('clearDate', function (selected) {
+				$('#date_arr').datepicker('setStartDate',null);
+			});
+
+			$("#date_arr").datepicker({
+				format: 'yyyy/mm/dd',
+				autoclose: true,
+			}).on('changeDate', function (selected) {
+				var endDate = new Date(selected.date.valueOf());
+				$('#date_dep').datepicker('setEndDate',endDate);
+			}).on('clearDate', function (selected) {
+				$('#date_dep').datepicker('setEndDate',null);
+			});
+			
+			
+// 			City_dep();	
+			
+			var City_dep = function () {
+		        //var params = JSON.parse("{}");
+		        var params = {};
+		        params["control_type"] ="select2"; //radio ,select ,select2, check
+		     	params["first_item_type"]="select"; // select:선택 , all:전체
+		     	params["code_div"]="CT";
+		     	params["type"]="code";
+		     	params["name"]="dep";
+		     	params["use_method1"]=$("select[id$=selCountry_dep]").val();
+		        LoadCommonCode(null, params, false, function (pResult) {
+		        	
+		        	console.log(pResult);
+		        	var data = jQuery.parseJSON(pResult);
+		             //셀렉트 박스 리셋 필요하 따라 리셋을 않해도 됩
+		             $("select[id$=selCity_dep] option").remove();
+		              console.log(data);
+		             //데이터 바인딩
+		             $("select[id$=selCity_dep]").append("<option value=''>선택</option>");
+		             for (var index in data.Table) {
+		                 $("select[id$=selCity_dep]").append("<option value='" + data.Table[index]["VALUE"] + "' style='color: gray;'>" + data.Table[index]["TEXT"] + "</option>");
+		             }
+		        }, false);
+		    };
+
+			//국가 변경
+		    $("select[id$=selCountry_dep]").change(function () {
+		    	if($("select[id$=selCountry_dep]").val()!=""){
+		    		//도시 호출
+		        	City_dep();	
+		    	}
+		    	else{
+		    		$("select[id$=selCity_dep]").val("");
+		    	}
+		    });
+			
+		    
+		    var City_arr = function () {
+		        //var params = JSON.parse("{}");
+		        var params = {};
+		        params["control_type"] ="select2"; //radio ,select ,select2, check
+		     	params["first_item_type"]="select"; // select:선택 , all:전체
+		     	params["code_div"]="CT";
+		     	params["type"]="code";
+		     	params["name"]="arr";
+		     	params["use_method1"]=$("select[id$=selCountry_arr]").val();
+		        LoadCommonCode(null, params, false, function (pResult) {
+		        	
+		        	console.log(pResult);
+		        	var data = jQuery.parseJSON(pResult);
+		             //셀렉트 박스 리셋 필요하 따라 리셋을 않해도 됩
+		             $("select[id$=selCity_arr] option").remove();
+		              console.log(data);
+		             //데이터 바인딩
+		             $("select[id$=selCity_arr]").append("<option value=''>선택</option>");
+		             for (var index in data.Table) {
+		                 $("select[id$=selCity_arr]").append("<option value='" + data.Table[index]["VALUE"] + "' style='color: gray;'>" + data.Table[index]["TEXT"] + "</option>");
+		             }
+		        }, false);
+		    };
+
+			//국가 변경
+		    $("select[id$=selCountry_arr]").change(function () {
+		    	if($("select[id$=selCountry_arr]").val()!=""){
+		    		//도시 호출
+		        	City_arr();	
+		    	}
+		    	else{
+		    		$("select[id$=selCity_arr]").val("");
+		    	}
+		    });
+			
+			
+			
+		    var params = {};
+		 	params["type"] ="Scd";
+		 	params["call_type"]="AllDate";
+		 	params["code"] ="01";
+		 	params["code_div"] ="01";
+		 	Ajax(params, function(pResult) {
+		 		 console.log(pResult);
+			},false);
+		});
+	</script>
+	
+	</head>
+	<body>
+	<div class="colorlib-loader"></div>
+	<div id="page">
+		<nav class="colorlib-nav" role="navigation">
+			<!-- 탑메뉴 들어가는 곳 -->
+			<jsp:include page="inc/top.jsp" />
+			<!-- 탑메뉴 들어가는 곳 -->
+		</nav>
+		<aside id="colorlib-hero">
+			<div class="flexslider">
+				<ul class="slides">
+			   	<li style="background-image: url(https://images.pexels.com/photos/585009/pexels-photo-585009.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260);">
+			   		<div class="overlay"></div>
+			   		<div class="container-fluid">
+			   			<div class="row">
+				   			<div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12 slider-text">
+				   				<div class="slider-text-inner text-center">
+				   					<h2>어디든 떠나자</h2>
+				   					<h1>최저가 항공권 예약</h1>
+				   				</div>
+				   			</div>
+				   		</div>
+			   		</div>
+			   	</li>
+			   	<li style="background-image: url(https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);">
+			   		<div class="overlay"></div>
+			   		<div class="container-fluid">
+			   			<div class="row">
+				   			<div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12 slider-text">
+				   				<div class="slider-text-inner text-center">
+				   					<h2>믿을 수 있는</h2>
+				   					<h1>동행찾기</h1>
+				   				</div>
+				   			</div>
+				   		</div>
+			   		</div>
+			   	</li>
+			   	<li style="background-image: url(https://images.pexels.com/photos/887828/pexels-photo-887828.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);">
+			   		<div class="overlay"></div>
+			   		<div class="container-fluids">
+			   			<div class="row">
+				   			<div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12 slider-text">
+				   				<div class="slider-text-inner text-center">
+				   					<h2>생생한 정보</h2>
+				   					<h1>여행후기</h1>
+				   				</div>
+				   			</div>
+				   		</div>
+			   		</div>
+			   	</li>
+			   	<li style="background-image: url(https://images.pexels.com/photos/707195/pexels-photo-707195.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);">
+			   		<div class="overlay"></div>
+			   		<div class="container-fluid">
+			   			<div class="row">
+				   			<div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12 slider-text">
+				   				<div class="slider-text-inner text-center">
+				   					<h2>실용적인 정보만</h2>
+				   					<h1>꿀팁게시판</h1>
+				   				</div>
+				   			</div>
+				   		</div>
+			   		</div>
+			   	</li>	   	
+			  	</ul>
+		  	</div>
+		</aside>
+		<div id="colorlib-reservation">
+			<!-- <div class="container"> -->
+				<div class="row">
+					<div class="search-wrap">
+						<div class="container">
+							<ul class="nav nav-tabs">
+								<li class="active"><a data-toggle="tab" href="#flight"><i class="flaticon-plane"></i> 항공권 검색</a></li>
+							</ul>
+						</div>
+						<div class="tab-content">
+							<div id="flight" class="tab-pane fade in active">
+								
+<!-- 항공권 검색 박스 -->								
+							<form action='<c:url value="/flight"/>' id="booking-form" method="GET" class="colorlib-form">
+				              	<div class="row">
+				              	 <div class="col-md-2">
+				              	 	<div class="form-group">
+				                    <label for="date">출발지:</label>
+				                    <div class="form-field">
+				                      ${selCountry_dep}<br>
+				                      ${selCity_dep}
+				                    </div>
+				                  </div>
+				              	 </div>
+				              	 <div class="col-md-2">
+				              	 	<div class="form-group">
+				                    <label for="date">도착지:</label>
+				                    <div class="form-field">
+				                      ${selCountry_arr}<br>
+				                      ${selCity_arr}
+				                    </div>
+				                  </div>
+				              	 </div>
+				                <div class="col-md-2">
+				                  <div class="form-group">
+				                    <label for="date">출발일:</label>
+				                    <div class="form-field">
+				                      <i class="icon icon-calendar2"></i>
+				                      <input type="text" id="date_dep" class="form-control date" name="date_dep" autocomplete="off">
+				                    </div>
+				                  </div>
+				                </div>
+				                <div class="col-md-2">
+				                  <div class="form-group">
+				                    <label for="date">도착일:</label>
+				                    <div class="form-field">
+				                      <i class="icon icon-calendar2"></i>
+				                      <input type="text" id="date_arr" class="form-control date" name="date_arr" autocomplete="off">
+				                    </div>
+				                  </div>
+				                </div>
+				                <div class="col-md-2">
+				                  <div class="form-group">
+				                    <label for="mainquantity">성인:</label>
+				                    <div class="form-field">
+				                      <input type="number" autocomplete="off" id="adultquantity" value="1" min="0" max="9" class="form-control" name="adultquantity"  data-toggle="modal" data-target="#myModal">
+				                      <div class="form-quantity">
+				                       <table class="quantitytable" >
+				                       <tr><td>
+				                       성인(만16세 이상):</td><td>
+				                      	<input type="number" id="adultquantity" value="1" min="0" max="9" class="form-control">
+				                      	</td></tr>
+				                      	 <tr><td>
+				                      	유/소아(만15세이하):</td><td>
+				                      	<input type="number" id="childquantity" value="1" min="0" max="9" class="form-control">
+				                      	</td></tr>
+				                      	</table>
+				                      </div>
+				                      
+				                    </div>
+				                    <label for="mainquantity">소아:</label>
+				                    <div class="form-field">
+				                      <input type="number" id="childquantity" value="1" min="0" max="9" class="form-control" name="childquantity">
+				                      </div>
+				                  </div>
+				                </div>
+				                <div class="col-md-2">
+				                  <div class="form-group">
+				                    <label for="guests">좌석등급</label>
+				                    <div class="form-field">
+				                      <i class="icon icon-arrow-down3"></i>
+				                      <select name="comp" id="people" class="form-control">
+				                        <option value="Y" style="color: gray;">이코노미</option>
+				                        <option value="C" style="color: gray;">비즈니스</option>
+				                        <option value="F" style="color: gray;">일등급</option>
+				                      </select>
+				                    </div>
+				                  </div>
+				                </div>
+				                <div class="col-md-2">
+				                  <input type="submit" name="submit" id="submit" value="예매하기" class="btn btn-primary btn-block">
+				                </div>
+				              </div>
+				            </form>
+				         </div>
+			         </div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="colorlib-tour colorlib-light-grey">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 col-md-offset-3 text-center colorlib-heading animate-box">
+						<p>생생한 정보 가득가득</p>
+						<h2><a href="tourreview">베스트 여행후기</a></h2>
+					</div>
+				</div>
+			</div>
+			<div class="tour-wrap">
+				<c:forEach var="bean" items="${reviewList }">
+			
+					<a href="/myapp/reviewcontent?seq=${bean.seq }" class="tour-entry animate-box">
+						<c:if test="${bean.file_use eq 'N' }">
+							<div class="tour-img" style="background-image:url(resources/upload/empty.PNG);"></div>
+						</c:if>
+						<c:if test="${bean.file_use eq 'Y' }">
+							<div class="tour-img" style="">${bean.thumb }</div>
+						</c:if>
+						<span class="desc">
+							<h2>${bean.country }</h2>
+							<span class="city" ></span>
+							<span class="price">${bean.recommend } Likes</span>
+						</span>
+					</a>
+				
+				</c:forEach>
+			</div>
+		</div>
+
+
+		<div id="colorlib-blog">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 col-md-offset-3 text-center colorlib-heading animate-box">
+						<p>더욱 즐거운 여행이되길 바란다면 함께 즐겨요</p>
+						<a href="together"><h2>동행구해요</h2></a>
+					</div>
+				</div>
+				<div class="blog-flex">
+					<div class="f-entry-img" style="background-image: url(https://images.pexels.com/photos/1267694/pexels-photo-1267694.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);">
+					</div>
+					<div class="blog-entry aside-stretch-right">
+						<div class="row">
+						
+							<c:forEach var="bean" items="${togetherList }">
+								<div class="col-md-12 animate-box">
+									<a href="/myapp/togetherContent?seq=${bean.seq }" class="blog-post">
+<!-- 									여기 사진 -->
+										<c:choose>
+											<c:when test="${bean.profile eq null }">
+												<c:if test="${bean.gender eq '02' }">
+													<span><img src="resources/upload/profile/female.jpg" alt="Avatar" style="width:100px; border-radius: 50%;"></span>
+												</c:if>
+												<c:if test="${bean.gender eq '01' }">
+													<span><img src="resources/upload/profile/male.jpg" alt="Avatar" style="width:100px; border-radius: 50%;"></span>	
+												</c:if>
+											</c:when>
+											<c:otherwise>
+												<span><img src="resources/upload/profile/${bean.profile }" alt="Avatar" style="width:100px; border-radius: 50%;"></span>
+											</c:otherwise>
+										</c:choose>	
+										
+										
+										<div class="desc">
+											<span class="date">${bean.regi_date }</span>
+											<h3>${bean.subject }</h3>
+											<span class="cat">${bean.country }</span>
+										</div>
+									</a>
+								</div>
+							</c:forEach>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="colorlib-intro" class="intro-img" style="background-image: url(resources/assets/tour/images/cover-img-1.jpg);" data-stellar-background-ratio="0.5">
+			<div class="overlay"></div>
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 animate-box">
+						<div class="intro-desc">
+							<div class="text-salebox">
+								<div class="text-lefts">
+									<div class="sale-box">
+										<div class="sale-box-top">
+											<h2 class="number">24/7</h2>
+											<span class="sup-1"></span>
+											<span class="sup-2">!</span>
+										</div>
+										<h2 class="text-sale">Always</h2>
+									</div>
+								</div>
+								<div class="text-rights">
+									<a href="together"><h3 class="title">마음맞는 동행</h3></a>
+									<p>&lt;여행에 미치다&gt;팀과 함께 하는 재밌는 여행을 떠나보세요! 혼자가보는 곳도 친구와 함께라면 즐길 수 있어요 :D</p>
+									<p><a href="#" class="btn btn-primary">동행찾기</a> <a href="#" class="btn btn-primary btn-outline">더읽기</a></p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6 animate-box">
+						<div class="video-wrap">
+							<div class="video colorlib-video" style="background-image: url(https://support.visitkorea.or.kr/img/call?cmd=VIEW&id=b50ecded-ed8c-415b-bed6-41be1d7aa02c);">
+								<a href="https://www.youtube.com/watch?v=wzM2K0h1j4Y" class="popup-vimeo"><i class="icon-video"></i></a>
+								<div class="video-overlay"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="colorlib-testimony" class="colorlib-light-grey">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 col-md-offset-3 text-center colorlib-heading animate-box">
+						${honeyimg }
+						<a href="honey"><h2>진짜 꿀팁모음</h2></a>
+						<p>위트래블이 보장하는 REAL 정보</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-8 col-md-offset-2 animate-box">						
+						<div class="owl-carousel2">
+							<c:forEach var="bean" items="${honeyList }">
+								<a href="/myapp/honeycontent?seq=${bean.seq }">
+									<div class="item">
+										<div class="testimony text-center">
+											<c:if test="${bean.file_use eq 'N' }">
+												<span class="img-user" style="background-image:url(resources/upload/empty.PNG); width: 300px;"></span>
+											</c:if>
+											<c:if test="${bean.file_use eq 'Y' }">
+												<span class="img-user" style=" width: 300px;">${bean.thumb }</span>
+											</c:if>
+											<span class="user">${bean.subject }</span>
+											<small>${bean.nickName }</small>
+										</div>
+									</div>
+								</a>
+							</c:forEach>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+
+		<div class="colorlib-tour">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 col-md-offset-3 text-center colorlib-heading animate-box">
+						<p>마치 여행지에 와있는 듯한</p>
+						<a href="gallery"><h2>위스타그램</h2></a>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<div class="f-tour">
+							<div class="row row-pb-md">
+								<div class="col-md-6">
+									<div class="row">
+									<c:forEach var="i" begin="0" end="3" step="1">
+									<c:set var="bean" value="${galleryList.get(i) }" />
+										<div class="col-md-6 animate-box">
+											<a href='<c:url value="galleryId?board_id=gallery&regi_id=${bean.regi_id }"/>'><span class="f-tour-img" style="background-image: url(resources/upload/${bean.path1});">
+												<div class="desc">
+													<div class="desc">
+														<h3 style="float:left;">${bean.etc1 }</h3>
+														<h3 style="float:right;">${bean.recommend } Likes</h3>
+													</div>
+												</div>
+											</span></a>
+										</div>
+										</c:forEach>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="row">
+									<c:forEach var="i" begin="4" end="7" step="1">
+										<c:set var="bean" value="${galleryList.get(i) }" />
+										<div class="col-md-6 animate-box">
+											<span class="f-tour-img" style="background-image: url(resources/upload/${bean.path1});">
+												<div class="desc">
+													<h3 style="float:left;">${bean.etc1 }</h3>
+													<h3 style="float:right;">${bean.recommend } Likes</h3>
+												</div>
+											</span>
+										</div>
+									</c:forEach>
+									</div>
+								</div>
+								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	
+		<!-- 이메일구독 들어가는 곳 -->
+	<jsp:include page="inc/email.jsp" />
+
+		
+	
+
+	<div class="gototop js-top">
+		<a href="#" class="js-gotop"><i class="icon-arrow-up2"></i></a>
+	</div>
+	
+	<!-- 푸터 들어가는 곳 -->
+	<jsp:include page="inc/bottom.jsp" />
+	
+
+	</body>
+</html>
+

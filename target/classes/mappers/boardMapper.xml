@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwill.mapper.BoardMapper">
+	<select id="maxNum" resultType="java.lang.Integer">
+		select max(seq) from board
+
+	</select>
+
+	<insert id="write">
+		insert into board
+		values(null,#{board_id},#{subject},#{content},#{country},#{file_use},#{notice_use},#{secret_use},#{readcount},#{like},#{hate},#{recommend},#{etc1},#{etc2},#{etc3},#{etc4},#{regi_id},now(),#{regi_ip_addr},#{modifier_id},now(),#{modifier_ip_addr})
+		<!-- <selectKey keyProperty="seq" resultType="java.lang.Integer" order="AFTER"> -->
+		<!-- SELECT LAST_INSERT_ID() from board -->
+		<!-- </selectKey> -->
+		<selectKey keyProperty="seq" resultType="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	<insert id="fileUpload">
+		insert into file_setting
+		values(null,#{board_seq},#{path},#{file_name},#{ext},#{size},#{regi_id},now(),#{regi_ip_addr})
+	</insert>
+	<select id="getBoardListAll"
+		resultType="com.itwill.domain.BoardBean">
+		select * from board
+	</select>
+	<select id="getBoardList"
+		resultType="com.itwill.domain.BoardBean">
+		select
+			*
+			,sf_get_nickname(regi_id) as nickName
+		from
+			board
+		where
+			board_id = #{board_id}
+		<if test='searchSelect == "subject"'>
+			and subject like CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "nickName"'>
+			and sf_get_nickname(regi_id) like
+			CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "content"'>
+			and content like CONCAT('%',#{search},'%')
+		</if>
+		order by
+		seq desc
+		limit
+		#{startRow}, #{pageSize}
+	</select>
+	<select id="getHotList" resultType="com.itwill.domain.BoardBean">
+		select
+			*
+			,sf_get_nickname(regi_id) as nickName
+		from
+			board
+		where
+			board_id = #{board_id}
+		order by
+			recommend desc
+		limit
+			0, 5
+	</select>
+	<select id="getNoticeList"
+		resultType="com.itwill.domain.BoardBean">
+		select
+		*
+		,sf_get_nickname(regi_id) as nickName
+		from
+		board
+		where
+		board_id = #{board_id} and notice_use = 'Y'
+		order by
+		seq desc
+		limit
+		0, 5
+	</select>
+	<select id="getArticle" resultType="com.itwill.domain.BoardBean">
+		select
+		 	*
+		 	,sf_get_nickname(regi_id) as nickName  
+		 from 
+			board 
+		 where 
+		 	seq = #{seq}
+	</select>
+	<select id="getSeq" resultType="java.lang.Integer">
+		SELECT LAST_INSERT_ID() AS seq;
+	</select>
+	<select id="getFile"
+		resultType="com.itwill.domain.FileSettingBean">
+		select * from file_setting
+	</select>
+	<select id="getBoardList2"
+		resultType="com.itwill.domain.BoardBean">
+		select * from board where board_id=#{board_id}
+	</select>
+	<select id="getBoardFile"
+		resultType="com.itwill.domain.BoardBean">
+		select
+		*,
+		sf_get_filePath(seq) as path1
+		from
+		board where board_id=#{board_id}
+		order by seq desc;
+	</select>
+	<select id="getBoardFileByOrder"
+		resultType="com.itwill.domain.BoardBean">
+		select
+		*,
+		sf_get_filePath(seq) as path1
+		from
+		board where board_id=#{board_id}
+		order by recommend desc;
+	</select>
+	<select id="getBoardCount" resultType="java.lang.Integer">
+		select
+		count(*)
+		from
+		board
+		where
+		board_id=#{board_id}
+		<if test='searchSelect == "subject"'>
+			and subject like CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "regi_id"'>
+			and regi_id like CONCAT('%',#{search},'%')
+		</if>
+	</select>
+	<select id="getBoardCountById" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			board
+		where
+			regi_id = #{regi_id}
+		<if test='board_id != null'>
+			board_id = #{board_id}
+		</if>
+		<if test='searchSelect == "subject"'>
+			and subject like CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "nickName"'>
+			and sf_get_nickname(regi_id) like
+			CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "content"'>
+			and content like CONCAT('%',#{search},'%')
+		</if>
+			and not board_id in ('gallery')
+	</select>
+	<select id="getSubBoardCount" resultType="java.lang.Integer">
+		select count(*) from
+		board where board_id=#{board_id} and etc1=#{etc1}
+	</select>
+	<update id="updateReadcount">
+		update board set readcount=readcount+1 where seq =
+		#{seq}
+	</update>
+
+
+	<select id="getSubBoard"
+		resultType="com.itwill.domain.BoardBean">
+		select *,sf_get_nickname(regi_id) as nickName from board where
+		board_id=#{board_id} and etc1=#{etc1}
+		<if test='searchSelect == "subject"'>
+			and subject like CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "nickName"'>
+			and sf_get_nickname(regi_id) like
+			CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "content"'>
+			and content like CONCAT('%',#{search},'%')
+		</if>
+		order by
+		seq desc
+		limit
+		#{startRow}, #{pageSize}
+	</select>
+
+
+	<select id="getBoardCountAll" resultType="java.lang.Integer">
+		select
+		count(*)
+		from
+		board
+		where board_id = #{board_id}
+	</select>
+	<delete id="delete">
+		delete from board where seq = #{seq}
+	</delete>
+
+	<!-- 추천수 관련 -->
+	<select id="recommendCount" resultType="java.lang.Integer">
+		select
+			recommend
+		from
+			board
+		where
+			seq = #{seq}
+	</select>
+	<select id="isRecommend" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			recommend
+		where
+			board_seq = #{seq} and regi_id = #{regi_id}
+	</select>
+	<insert id="recommendUp">
+		insert into recommend
+		values(null,#{seq},#{regi_id},now(),#{regi_ip_addr},null,null,null,null)
+	</insert>
+	<delete id="recommendDown">
+		delete from recommend where board_seq = #{seq} and
+		regi_id = #{regi_id}
+	</delete>
+	<select id="updateRecommend">
+		update board set recommend = #{recommend} where seq = #{seq}
+	</select>
+	<!-- /추천수 관련 -->
+
+
+
+	<select id="getFileById"
+		resultType="com.itwill.domain.FileSettingBean">
+		select * from file_setting where regi_id=#{regi_id}
+	</select>
+	
+		<select id="getFileBySeq"
+		resultType="com.itwill.domain.FileSettingBean">
+		select * from file_setting where board_seq=#{board_seq}
+	</select>
+
+	<select id="getBoardFileById"
+		resultType="com.itwill.domain.BoardBean">
+		select
+		*,
+		sf_get_filePath(seq) as path1
+		from
+		board where board_id=#{board_id} and regi_id = #{regi_id}
+		order by seq desc;
+	</select>
+
+	<select id="filenameCheck" resultType="Integer">
+		select count(*) from
+		file_setting where file_name = #{file_name}
+	</select>
+	
+	<!-- 나의 작성글 가져오기 -->
+	<select id="getBoardListById" resultType="com.itwill.domain.BoardBean">
+		select
+			*
+			,sf_get_nickname(regi_id) as nickName
+		from
+			board
+		where
+			regi_id = #{regi_id}
+		<if test='board_id != null'>
+			board_id = #{board_id}
+		</if>
+		<if test='searchSelect == "subject"'>
+			and subject like CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "nickName"'>
+			and sf_get_nickname(regi_id) like
+			CONCAT('%',#{search},'%')
+		</if>
+		<if test='searchSelect == "content"'>
+			and content like CONCAT('%',#{search},'%')
+		</if>
+			and not board_id in ('gallery')
+		order by
+			seq desc
+		limit
+			#{startRow}, #{pageSize}
+		
+		
+	</select>
+	
+    <insert id="insertComment">
+		insert into board_comment
+		values(null, #{board_seq}, #{content}, #{re_ref}, #{re_lev}, #{re_seq}, #{likeCount}, #{hateCount}, 0, #{regi_id}, now(), #{regi_ip_addr}, null, null, null)	
+	</insert>
+    
+    <select id="getCommentList" resultType="com.itwill.domain.BoardCommentBean">
+		select 
+			*
+			,sf_get_nickname(regi_id) as nickname 
+		from 
+			board_comment
+		where 
+			board_seq = #{seq}
+		order by
+			seq asc
+	</select>
+	
+	<delete id="comDelete">
+		delete from 
+			board_comment
+		where 
+			seq = #{seq}
+	</delete>
+	
+	<!-- 좋아요 관련 -->
+	<select id="likeCount" resultType="java.lang.Integer">
+		select
+			likeCount
+		from
+			board_comment
+		where
+			seq = #{seq}
+	</select>
+	<select id="isLike" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			like_hate
+		where
+			comment_seq = #{seq} 
+		and 
+			regi_id = #{regi_id}
+		and 
+			isLike = 1
+	</select>
+	<insert id="likeUp">
+		insert into like_hate
+		values(null, #{seq}, 1, 0, #{regi_id}, now(), #{regi_ip_addr})
+	</insert>
+	<delete id="likeDown">
+		delete from 
+			like_hate 
+		where 
+			comment_seq = #{seq} 
+		and
+			regi_id = #{regi_id}
+		and 
+			isLike = 1
+	</delete>
+	<select id="updateLike">
+		update 
+			board_comment 
+		set 
+			likeCount = #{like} 
+		where 
+			seq = #{seq}
+	</select>
+	<!-- /좋아요 관련 -->
+	
+	<!-- 싫어요 관련 -->
+	<select id="hateCount" resultType="java.lang.Integer">
+		select
+			hateCount
+		from
+			board_comment
+		where
+			seq = #{seq}
+	</select>
+	<select id="isHate" resultType="java.lang.Integer">
+		select
+			count(*)
+		from
+			like_hate
+		where
+			comment_seq = #{seq} 
+		and 
+			regi_id = #{regi_id}
+		and 
+			isHate = 1
+	</select>
+	<insert id="hateUp">
+		insert into like_hate
+		values(null, #{seq}, 0, 1, #{regi_id}, now(), #{regi_ip_addr})
+	</insert>
+	<delete id="hateDown">
+		delete from 
+			like_hate 
+		where 
+			comment_seq = #{seq} 
+		and
+			regi_id = #{regi_id}
+		and 
+			isHate = 1
+	</delete>
+	<select id="updateHate">
+		update 
+			board_comment 
+		set 
+			hateCount = #{hate} 
+		where 
+			seq = #{seq}
+	</select>
+	<!-- /싫어요 관련 -->
+	
+	
+	
+	<!-- 게시물 내용 수정 -->
+    <update id="contentUpdate">
+    	update board set subject=#{subject}, content=#{content} where seq=#{seq}
+    </update>
+    
+    
+    <select id="getMainList" resultType="com.itwill.domain.BoardBean">
+		select
+			*
+			,sf_get_nickname(regi_id) as nickName
+		from
+			board
+		where
+			board_id = #{board_id}
+		order by
+			recommend desc
+		limit
+			0, #{count}
+	</select>
+	
+	<delete id="imageDeleteFromFS">
+		delete from file_setting where board_seq = #{seq}
+	</delete>
+	
+	<delete id="imageDeleteFromBoard">
+		delete from board where seq = #{seq}
+	</delete>
+    
+</mapper>

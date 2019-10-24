@@ -1,0 +1,942 @@
+package com.itwill.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.RequestContextUtils;
+
+import com.itwill.domain.AirlineBean;
+import com.itwill.domain.BoardBean;
+import com.itwill.domain.BoardSettingBean;
+import com.itwill.domain.DataTableBean;
+import com.itwill.domain.FileSettingBean;
+import com.itwill.service.BoardService;
+import com.itwill.service.MemberService;
+import com.itwill.service.UtilService;
+import com.itwill.domain.MemberBean;
+import com.itwill.domain.MessageBean;
+import com.itwill.domain.PageBean;
+
+@Controller
+public class MemberController {
+
+	@Inject
+	private MemberService service;
+	@Inject
+	private BoardService boardService;
+	@Inject
+	private UtilService util;
+	@Resource(name = "uploadPath")
+	private String uploadPath;
+
+	// http://localhost:8080/myapp/join
+	@RequestMapping(value = "/join", method = RequestMethod.GET)
+	public String join(HttpSession session, Model model) {
+		System.out.println("/MemberController GET join() ");
+
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		// 전화번호
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "02");
+		map.put("control_id", "ddlPhone");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		model.addAttribute("ddlPhone", util.getCodeData(map));
+
+		// 이메일
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "04");
+		map.put("control_id", "ddlEmail");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		model.addAttribute("ddlEmail", util.getCodeData(map));
+
+		// 성별구분
+		map.clear();
+		map.put("control_type", "radio"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "01");
+		map.put("control_id", "gender");
+		map.put("type", "code");
+		model.addAttribute("gender", util.getCodeData(map));
+
+		return "/team_project/tour/member/joinForm";
+	}
+
+	// http://localhost:8080/myapp/join
+	@RequestMapping(value = "/join", method = RequestMethod.POST)
+	public String joinPost(HttpSession session, Model model, MemberBean mb, HttpServletRequest request) {
+		System.out.println("/MemberController POST joinPost() ");
+		
+		mb.setRegi_ip_addr(util.getIp(request));
+		mb.setModifier_ip_addr(util.getIp(request));
+
+		int result = service.insertMember(mb);
+		if(result>0) {
+			model.addAttribute("msg", "위트래블러로의 첫 로그인을 해주세요~!");
+			model.addAttribute("url", "tourlogin");
+			
+		} else {
+			model.addAttribute("msg", "회원가입 실패 ㅠㅠ 고객센터로 문의부탁드립니다.");
+			return "/team_project/tour/member/msg";
+		}
+
+//		return "/team_project/tour/member/joinForm";
+		return "/team_project/tour/common/msg";
+	}
+
+	// http://localhost:8080/myapp/login
+	@RequestMapping(value = "/tourlogin", method = RequestMethod.GET)
+	public String tourlogin(HttpSession session) {
+		System.out.println("/MemberController GET tourlogin() ");
+
+		return "/team_project/tour/member/loginForm";
+	}
+
+	// http://localhost:8080/myapp/login
+	@RequestMapping(value = "/tourlogin", method = RequestMethod.POST)
+	public String tourloginPost(HttpSession session, MemberBean mb, Model model) {
+
+		System.out.println("/MemberController POST loginPost() ");
+		System.out.println("아이디:" + mb.getId());
+		System.out.println("비밀번호:" + mb.getPassword());
+
+		MemberBean mb2 = service.userCheck(mb.getId(), mb.getPassword());
+		// mb2 있으면 세션값 생성
+		if (mb2 != null) {
+			//결과값이 1 일떄 이벤드
+			if(mb2.getResult().equals("1")) {
+				session.setAttribute("id", mb2.getId());
+				session.setAttribute("name", mb2.getName());
+				session.setAttribute("eng_name", mb2.getEng_name());
+				session.setAttribute("nickname", mb2.getNickname());
+				session.setAttribute("phone", mb2.getPhone());
+				session.setAttribute("email", mb2.getEmail());
+				session.setAttribute("zip_code", mb2.getZip_code());
+				session.setAttribute("address1", mb2.getAddress1());
+				session.setAttribute("address2", mb2.getAddress2());
+				session.setAttribute("gender", mb2.getGender());
+				session.setAttribute("profile", mb2.getProfile_photo());
+				
+				model.addAttribute("msg",mb2.getNickname()+"님 반가워요 :D");
+				model.addAttribute("url","tourindex");
+				return "/team_project/tour/common/msg";
+			}
+		}
+			
+		model.addAttribute("msg", "아이디/비밀번호를 확인해주세요.");
+			
+		
+		return "/team_project/tour/member/msg";
+
+	}
+
+	// http://localhost:8080/myapp/memberInfo
+	@RequestMapping(value = "/memberInfo", method = RequestMethod.GET)
+	public String memberInfo(HttpSession session,Model model) {
+		System.out.println("/MemberController GET memberInfo() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+
+		return "/team_project/tour/member/memberInfo";
+	}
+
+	// http://localhost:8080/myapp/findForm
+	@RequestMapping(value = "/find", method = RequestMethod.GET)
+	public String find(HttpSession session) {
+		System.out.println("/MemberController GET find() ");
+
+		return "/team_project/tour/member/findForm";
+	}
+
+	// http://localhost:8080/myapp/update
+	@RequestMapping(value = "/update", method = RequestMethod.GET)
+	public String update(HttpSession session, Model model, MemberBean mb) {
+
+		System.out.println("/MemberController GET update() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		
+		// 회원 검색 (아이디로)
+		
+		mb = service.userInfo((String) session.getAttribute("id"));		
+		model.addAttribute("mb", mb);
+		
+		// 데이터 가공
+		// 휴대폰 번호는 -를 통해서 잘라서 바인딩
+		String phone = mb.getPhone();
+		//System.out.println("phone : " + phone); 
+		if(phone!=null) {
+			String[] phoneArr = phone.split("-");
+			if(phoneArr.length==3) {
+				phone = phoneArr[0];
+				model.addAttribute("phone2",phoneArr[1]);
+				model.addAttribute("phone3",phoneArr[2]);
+			}
+		}
+		// Email은 @를 기준으로 잘라서 바인딩
+		String email= mb.getEmail();
+		//System.out.println(phone);
+		if(email!=null) {
+			String[] emailArr = email.split("@");
+			if(emailArr.length==2) {
+				email = emailArr[1];
+				model.addAttribute("email1",emailArr[0]);
+				model.addAttribute("email2",emailArr[1]);
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		// 전화번호
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "02");
+		map.put("control_id", "ddlPhone");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		map.put("selectItem", phone);	
+		model.addAttribute("ddlPhone", util.getCodeData(map));
+
+		// 이메일
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "04");
+		map.put("control_id", "ddlEmail");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		map.put("selectItem", email);
+		model.addAttribute("ddlEmail", util.getCodeData(map));
+
+		return "/team_project/tour/member/updateForm";
+
+	}
+
+	// http://localhost:8080/myapp/updateProfile
+		@RequestMapping(value = "/updateProfile", method = RequestMethod.POST)
+		public String updateProfile(MultipartFile file, HttpServletRequest request, 
+				HttpSession session,Model model) throws IOException {
+			
+			// 파일정보
+			String filename1 = "";
+			System.out.println(" 파일정보 : " + file);
+			
+						String filename = file.getOriginalFilename();
+						System.out.println("filename8888 ==> " + filename);
+						int result = boardService.filenameCheck(filename);
+							System.out.println("filenameCheck result 8888==> " + result);
+							
+						    if (result > 0) {          
+						    	String name[] = filename.split("\\.");
+						    	// 파일이름 난수방법으로 밀리쎄컨 붙여줌
+						    	name[0] += System.currentTimeMillis();
+						    	filename1 = name[0].concat("."+name[1]);
+							} else {
+						filename1 = filename;
+							}
+						    System.out.println("filename1 88 : " + filename1);
+						   
+						
+						String dateDir ="/profile";
+						
+						
+						System.out.println("targetDir 찍어본다88 : "+ uploadPath);
+						
+							File targetDir = new File(uploadPath + dateDir);
+								System.out.println("targetDir 찍어본다 : " + targetDir);
+							if (!targetDir.exists()) {
+								System.out.println("targetDir 만들기 전..88");
+								targetDir.mkdirs();
+								System.out.println("targetDir 만들었다..88");
+							}
+								System.out.println("targetDir 찍어본다2 : "+uploadPath);
+					
+							// 실제 파일은 file.getBytes()
+							// 파일을 upload 폴더에 넣기 => 파일 카피
+							File target = new File(uploadPath + dateDir, filename1);
+							System.out.println("target: 이름888: " +  target);
+							
+							
+								
+									FileCopyUtils.copy(file.getBytes(), target);
+								
+								
+								
+								FileSettingBean fs = new FileSettingBean();
+								fs.setFile_name(filename1);
+								fs.setPath(dateDir);
+								fs.setSize(file.getSize());
+								fs.setRegi_id((String)session.getAttribute("id"));
+								fs.setExt(file.getContentType());
+								// regi_ip_addr, modifier_ip_addr 세팅
+								fs.setRegi_ip_addr(util.getIp(request));
+								fs.setBoard_seq(0); // profile 사진은 그냥 0할래
+								
+								System.out.println("99999 아앙");
+								
+								// file_setting DB에 파일정보 저장
+								boardService.fileUpload(fs);		
+								// 프사변경 in 멤버DB
+								int changed = service.updateProfile(filename1,(String)session.getAttribute("id"));
+			
+								System.out.println("99999 ㅃ아앙  " + changed);
+							
+			return "redirect:mypage";
+			
+		}
+	
+	
+	
+	
+	// http://localhost:8080/myapp/updateForm
+	@RequestMapping(value = "/update", method = RequestMethod.POST)
+	public String updatePost(MemberBean mb, HttpServletRequest request, 
+			HttpSession session,Model model) throws IOException {
+		System.out.println("/MemberController GET updatePost() ");
+		
+		
+		// 파일정보
+		/* String filename1 = "";
+		System.out.println(" 파일정보 : " + file);
+		
+			System.out.println("여기드러오지마");
+					String filename = file.getOriginalFilename();
+					System.out.println("filename ==> " + filename);
+					int result = boardService.filenameCheck(filename);
+						System.out.println("filenameCheck result ==> " + result);
+						
+					    if (result > 0) {          
+					    	String name[] = filename.split("\\.");
+					    	// 파일이름 난수방법으로 밀리쎄컨 붙여줌
+					    	name[0] += System.currentTimeMillis();
+					    	filename1 = name[0].concat("."+name[1]);
+						} else {
+					filename1 = filename;
+						}
+					    System.out.println("filename1 : " + filename1);
+					   
+					
+					String dateDir ="/profile";
+					
+					
+					System.out.println("targetDir 찍어본다1 : "+ uploadPath);
+					
+						File targetDir = new File(uploadPath + dateDir);
+							System.out.println("targetDir 찍어본다 : " + targetDir);
+						if (!targetDir.exists()) {
+							System.out.println("targetDir 만들기 전..");
+							targetDir.mkdirs();
+							System.out.println("targetDir 만들었다..");
+						}
+							System.out.println("targetDir 찍어본다2 : "+uploadPath);
+				
+						// 실제 파일은 file.getBytes()
+						// 파일을 upload 폴더에 넣기 => 파일 카피
+						File target = new File(uploadPath + dateDir, filename1);
+						System.out.println("target: 이름: " +  target);
+						
+						
+							
+							mb.setProfile_photo(filename1);
+								FileCopyUtils.copy(file.getBytes(), target);
+							
+							
+							
+							FileSettingBean fs = new FileSettingBean();
+							fs.setFile_name(filename1);
+							fs.setPath(dateDir);
+							fs.setSize(file.getSize());
+							fs.setRegi_id(request.getParameter("id"));
+							fs.setExt(file.getContentType());
+							// regi_ip_addr, modifier_ip_addr 세팅
+							fs.setRegi_ip_addr(util.getIp(request));
+							fs.setBoard_seq(0); // profile 사진은 그냥 0할래
+							
+							
+							// file_setting DB에 파일정보 저장
+								boardService.fileUpload(fs);										
+							*/
+		
+		// 회원정보
+				
+				mb.setId(request.getParameter("id"));
+				mb.setAddress1(request.getParameter("address1"));
+				mb.setAddress2(request.getParameter("address2"));
+				mb.setName(request.getParameter("name"));
+				mb.setNickname(request.getParameter("nickname"));
+				if(request.getParameter("password").equals("")) {
+					mb.setPassword(request.getParameter("password2"));
+				} else {
+					mb.setPassword(request.getParameter("password"));
+				}
+				mb.setEng_name(request.getParameter("eng_name"));
+				mb.setPhone(request.getParameter("phone"));
+				mb.setEmail(request.getParameter("email"));
+				mb.setZip_code(request.getParameter("zip_code"));
+				
+				System.out.println(mb.getId());
+				System.out.println("getAddress1 : " + mb.getAddress1());
+				System.out.println("getAddress2 : " +mb.getAddress2());
+		
+		
+		
+		
+		// 멤버DB 업데이트
+		int updated = service.updatePost(mb);
+		if(updated > 0) {
+			model.addAttribute("msg","정보수정 성공!");
+			model.addAttribute("url","mypage");
+		} else {
+			model.addAttribute("msg","정보수정 실패 ㅜ 고객센터로 문의보내주세요");
+		}
+		
+		
+		
+//		MemberBean mb2 = service.userCheck(mb.getId(), mb.getPassword());
+//		session.setAttribute("eng_name", mb2.getEng_name());
+		//return "redirect:tourindex";
+		return "team_project/tour/common/msg";
+		// 회원 수정 후 마이 페이지으로 가게끔
+	}
+	
+
+	// http://localhost:8080/myapp/myinfo
+	@RequestMapping(value = "/myinfo", method = RequestMethod.GET)
+	public String myinfo(HttpSession session, MemberBean mb,Model model) {
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+
+		// 회원 검색 (아이디로)
+		
+				mb = service.userInfo((String) session.getAttribute("id"));		
+				model.addAttribute("mb", mb);
+				
+				// 데이터 가공
+				// 휴대폰 번호는 -를 통해서 잘라서 바인딩
+				String phone = mb.getPhone();
+				//System.out.println("phone : " + phone); 
+				if(phone!=null) {
+					String[] phoneArr = phone.split("-");
+					if(phoneArr.length==3) {
+						
+						phone = phoneArr[0];
+						model.addAttribute("phone1",phoneArr[0]);
+						model.addAttribute("phone2",phoneArr[1]);
+						model.addAttribute("phone3",phoneArr[2]);
+					}
+				}
+				// Email은 @를 기준으로 잘라서 바인딩
+				String email= mb.getEmail();
+				//System.out.println(phone);
+				if(email!=null) {
+					String[] emailArr = email.split("@");
+					if(emailArr.length==2) {
+						email = emailArr[1];
+						model.addAttribute("email1",emailArr[0]);
+						model.addAttribute("email2",emailArr[1]);
+					}
+				}
+
+				Map<String, Object> map = new HashMap<String, Object>();
+				
+				// 전화번호
+				map.clear();
+				map.put("control_type", "select"); // radio ,select ,select2, check
+				map.put("first_item_type", "select"); // select:선택 , all:전체
+				map.put("code_div", "02");
+				map.put("control_id", "ddlPhone");
+				map.put("type", "code");
+				map.put("class", "form-control3");
+				map.put("selectItem", phone);	
+				model.addAttribute("ddlPhone", util.getCodeData(map));
+
+				// 이메일
+				map.clear();
+				map.put("control_type", "select"); // radio ,select ,select2, check
+				map.put("first_item_type", "select"); // select:선택 , all:전체
+				map.put("code_div", "04");
+				map.put("control_id", "ddlEmail");
+				map.put("type", "code");
+				map.put("class", "form-control3");
+				map.put("selectItem", email);
+				model.addAttribute("ddlEmail", util.getCodeData(map));
+		System.out.println("/MemberController GET myinfo() ");
+
+		return "/team_project/tour/member/myinfo";
+	}
+
+	// http://localhost:8080/myapp/deleteForm
+	@RequestMapping(value = "/delete", method = RequestMethod.GET)
+	public String delete(HttpSession session, MemberBean mb,Model model) {
+		
+		System.out.println("/MemberController GET delete() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		
+		model.addAttribute("mb", mb);
+
+		// session에서 id 가져오기
+		String id = (String) session.getAttribute("id");
+
+		// 예매목록 가서 가장 해당 아이디 의 예매내역 가져오기 select - memberController로 옮길 예정 0909 ~
+		List<AirlineBean> reservationList = service.getReservationList(id);
+
+		// 예매내역 리스트 가져와서 model에 add하기
+		model.addAttribute("reservationList", reservationList);
+		
+		return "/team_project/tour/member/deleteForm";
+	}
+
+	@RequestMapping(value = "/delete", method = RequestMethod.POST)
+	public String deletePost(HttpSession session,MemberBean mb,Model model) {
+		System.out.println("/HomeController2 GET deletePost() ");
+		
+		
+		
+		service.deletePost(mb);
+		session.invalidate();
+		return "redirect:tourlogin";
+		// 회원 탈퇴 후 로그인 페이지(가입할수있게)로 가게 끔
+	}
+
+
+	// http://localhost:8080/myapp/mypage
+	@RequestMapping(value = "/mypage", method = RequestMethod.GET)
+	public String mypage(HttpSession session,Model model) {
+		
+		System.out.println("/MemberController GET mypage() ");
+		
+		String regi_id = (String)session.getAttribute("id");
+		MemberBean mb = service.userInfo(regi_id);
+		System.out.println("프로필 사진 있냥? mypage 갈건뎅 " + mb.getProfile_photo());
+		
+		if(regi_id== null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		} else {
+			model.addAttribute("regi_id",regi_id);
+			model.addAttribute("mb",mb);
+		}
+		return "/team_project/tour/member/mypage";
+	}
+	
+	// http://localhost:8080/myapp/messageReceived
+	@RequestMapping(value = "/message", method = RequestMethod.GET)
+	public String message(HttpSession session,Model model) {
+
+		System.out.println("/MemberController GET message() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		
+		// 나에게 온 모든 쪽지 가져오기
+		List<MessageBean> msgList = service.getMsgList(regi_id);
+		
+		// nickname으로 바꾸기
+		for(MessageBean msg : msgList) {
+			msg.setSend_id(service.getNickName(msg.getSend_id()));
+		}
+		
+		model.addAttribute("msgList", msgList);
+		
+		return "/team_project/tour/member/messageReceived";
+	}
+			
+	// 쪽지 정보만들기
+	// http://localhost:8080/myapp/sendMessage
+	@RequestMapping(value = "/sendMessage", method = RequestMethod.GET)
+	public String sendMessage(HttpSession session, Model model, MemberBean mb, MessageBean msgb, HttpServletRequest request) {
+
+		System.out.println("/MemberController GET sendMessage() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		
+		String nickname = request.getParameter("nickname");
+		if(!nickname.equals("")) {
+			model.addAttribute("nickname", nickname);
+		}
+				
+
+		return "/team_project/tour/member/sendMessage";
+		
+	}
+	// 쪽지 정보만들기 POST
+	@RequestMapping(value = "/sendMessage", method = RequestMethod.POST)
+	public String sendMessagePost(HttpSession session, Model model, MessageBean msgBean, HttpServletRequest request) {
+		System.out.println("/HomeController2 POST sendMessage() ");
+
+		// 받는 사람의 닉네임을 id 로 저장해야 한다. (닉네임 -> 아이디)
+		String receive_nickname = (String)request.getParameter("receive_id");
+		String receive_id = service.getName(receive_nickname);
+		msgBean.setReceive_id(receive_id);
+		
+		String regi_id = (String)session.getAttribute("id");
+		msgBean.setRegi_id(regi_id);
+		msgBean.setRegi_ip_addr(util.getIp(request));
+		
+		service.sendMessage(msgBean);
+		
+		// 메시지 페이지로 넘어간다(완)
+		return "redirect:/message";
+ 	}
+
+	// http://localhost:8080/myapp/reservationDetails
+	// 항공권 예매, 항공권 취소 후 이동
+	// 로그인된 id의 모든 예매 기록을 select해 출력한다.
+	@RequestMapping(value = "/reservationDetails", method = RequestMethod.GET)
+	public String reservationDetails(HttpSession session, Model model) {
+		System.out.println("/MemberController GET reservationDetails() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+
+		// session에서 id 가져오기
+		String id = (String) session.getAttribute("id");
+
+		// 예매목록 가서 가장 해당 아이디 의 예매내역 가져오기 select - memberController로 옮길 예정 0909 ~
+		List<AirlineBean> reservationList = service.getReservationList(id);
+
+		// 예매내역 리스트 가져와서 model에 add하기
+		model.addAttribute("reservationList", reservationList);
+
+		return "/team_project/tour/member/reservationDetails";
+	}
+
+	// 항공권 예매 취소시 호출
+	// index를 가져와 예매기록 삭제후 reservationDetails로 이동
+	@RequestMapping(value = "/reservationCancel", method = RequestMethod.GET)
+	public String cancel(HttpSession session, HttpServletRequest request, Model model) {
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		
+		// 마이페이지의 예매내역페이지에서 예매취소 버튼 클릭시 이동
+		// 해당 항공권 예매를 취소한다.
+		// 취소한 후 다시 예매내역페이지로 이동
+
+		// 취소할 항공권의 index 값 가져오기
+		int seq = Integer.parseInt(request.getParameter("seq"));
+
+		// 항공권 취소
+		service.reservationCancel(seq);
+
+		// memberController의 reservationDetails로 이동
+		return "redirect:/reservationDetails";
+	}
+
+	// http://localhost:8080/myapp/reservationDetails
+	@RequestMapping(value = "/interest", method = RequestMethod.GET)
+	public String Interest(HttpSession session) {
+
+		System.out.println("/MemberController GET Interest() ");
+
+		return "/team_project/tour/member/Interest";
+	}
+
+	// http://localhost:8080/myapp/writing
+	@RequestMapping(value = "/writing", method = RequestMethod.GET)
+	public String writing(HttpSession session,Model model, HttpServletRequest request) {
+		System.out.println("/MemberController GET writing() ");
+		
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		PageBean pageBean = new PageBean();
+		pageBean.setRegi_id(regi_id);
+		// 검색 기능 세팅
+		// searchSelect 는 subject 또는 regi_id 이다 (각각 제목검색, 작성자검색)
+		String searchSelect = (String) request.getParameter("searchSelect");
+		// 검색할 스트링
+		String search = (String) request.getParameter("search");
+
+		if (searchSelect == null) {
+			searchSelect = "subject";
+		}
+		if (search == null) {
+			search = "";
+		}
+
+		pageBean.setSearchSelect(searchSelect);
+		pageBean.setSearch(search);
+
+		// 페이징 세팅
+		String pageNum = request.getParameter("pageNum");
+		if (pageNum == null) {
+			pageNum = "1";
+		}
+		pageBean.setPageSize(5);
+		pageBean.setPageNum(pageNum);
+		pageBean.setCount(boardService.getBoardCountById(pageBean));
+		
+		
+		List<BoardBean> boardList = boardService.getBoardListById(pageBean);
+		if(boardList== null) {
+			System.out.println("나의 글보기에서 무엇인가 잘못되었따...");
+		} else {
+			model.addAttribute("boardList",boardList);
+		}
+		model.addAttribute("pageBean", pageBean);
+		model.addAttribute("searchSelect", searchSelect);
+		model.addAttribute("search", search);
+
+		return "/team_project/tour/member/writing";
+	}
+
+
+	@RequestMapping(value = "/logout", method = RequestMethod.GET)
+	public String logout(HttpSession session,Model model) {
+		System.out.println("/MemberController GET logout() ");
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		session.invalidate();
+		model.addAttribute("msg","로그아웃되었습니다.");
+		model.addAttribute("url","tourindex");
+		
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+
+
+		return "team_project/tour/common/msg";
+	}
+	
+	// 회원 관리 상세 저장
+	@RequestMapping(value = "/adminMemberInfoUpdate", method = RequestMethod.POST)
+	public String adminMemberInfoUpdate(HttpSession session, Model model, MemberBean mb ,HttpServletRequest request, RedirectAttributes redirectAttr) {
+		System.out.println("/administra/adminMemberInfoUpdate" +  mb.getId());
+		
+		String orgId = mb.getId();
+		
+		// 수정자 정보 ip, id 입력
+		mb.setModifier_ip_addr(util.getIp(request));
+		mb.setModifier_id((String)session.getAttribute("id"));
+		mb.setRegi_ip_addr(util.getIp(request));
+		mb.setRegi_id((String)session.getAttribute("id"));
+
+		mb = service.setBeanUpdate(mb);
+		System.out.println("bsb.getBoard_id() : " + mb.getId());
+
+		if(mb.getResult().equals("1")) {
+			redirectAttr.addFlashAttribute("id",mb.getId());
+			return "redirect:adminMemberInfo";
+		}
+		else {
+			model.addAttribute("msg", mb.getMessage());
+			return "/team_project/tour/common/msg";
+		}
+	}
+		
+	// 회원 관리 상세정보
+	@RequestMapping(value = "/adminMemberInfo")
+	public String adminMemberInfo(HttpSession session, Model model, HttpServletRequest request
+			, MemberBean mb) {
+		// 세션값 없으면 뒤로 돌려보냄~
+		String regi_id = (String) session.getAttribute("id");
+
+		if (regi_id == null) {
+			model.addAttribute("msg", "잘못된 접근입니다.");
+			return "team_project/tour/member/msg";
+		}
+		System.out.println("/administra/adminMemberInfo" +  mb.getId());
+		
+		// 업데이트 혹은 인설트  실행시  이후 다시 이 페이지로 와야 하는데 redirect 를 이용하므로 따로 넘기는 변수를 받아야 함
+		// Map 형식으로 출력을 할수 있으니 아래와 같이 사용
+		Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
+		System.out.println("flashMap : "+ flashMap);
+		if(flashMap !=null) {
+			mb.setId(flashMap.get("id").toString());
+		}
+		//mb.setId("admin");
+		// 데이터 가져 오기
+		System.out.println("mb.getId() : " +mb.getId());
+		if(mb.getId()!=null) {
+			if(!mb.getId().equals("")) {
+				mb = service.getInfoBeanData(mb);
+			}
+		}
+		//System.out.println("mb.getId() : " +mb.getId());
+		model.addAttribute("mb",mb);
+
+		// 데이터 가공
+		// 휴대폰 번호는 -를 통해서 잘라서 바인딩
+		String phone = mb.getPhone();
+		//System.out.println("phone : " + phone); 
+		if(phone!=null) {
+			String[] phoneArr = phone.split("-");
+			if(phoneArr.length==3) {
+				phone = phoneArr[0];
+				model.addAttribute("phone2",phoneArr[1]);
+				model.addAttribute("phone3",phoneArr[2]);
+			}
+		}
+		// Email은 @를 기준으로 잘라서 바인딩
+		String email= mb.getEmail();
+		//System.out.println(phone);
+		if(email!=null) {
+			String[] emailArr = email.split("@");
+			if(emailArr.length==2) {
+				email = emailArr[1];
+				model.addAttribute("email1",emailArr[0]);
+				model.addAttribute("email2",emailArr[1]);
+			}
+		}
+		
+		System.out.println("email : "+ email);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		// 게시판 종류 코드 가져 오기
+		// 전화번호
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "02");
+		map.put("control_id", "ddlPhone");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		map.put("selectItem", phone);
+		model.addAttribute("ddlPhone", util.getCodeData(map));
+
+		// 이메일
+		map.clear();
+		map.put("control_type", "select"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "04");
+		map.put("control_id", "ddlEmail");
+		map.put("type", "code");
+		map.put("class", "form-control3");
+		map.put("selectItem", email);
+		model.addAttribute("ddlEmail", util.getCodeData(map));
+
+		// 성별구분
+		map.clear();
+		map.put("control_type", "radio"); // radio ,select ,select2, check
+		map.put("first_item_type", "select"); // select:선택 , all:전체
+		map.put("code_div", "01");
+		map.put("control_id", "gender");
+		map.put("type", "code");
+		map.put("selectItem", mb.getGender());
+		model.addAttribute("gender", util.getCodeData(map));
+		return "team_project/tour/administra/member/memberInfo";
+	}
+	// 회원 삭제
+	@RequestMapping(value = "/adminMemberInfoDelete", method = RequestMethod.POST)
+	public String adminMemberInfoDelete(HttpSession session, Model model, MemberBean mb) {
+		System.out.println("/administra/adminMemberInfoDelete" +  mb.getId());
+		// 비밀번호는 필요하지 않아서 null 처리
+		mb.setPassword(null);
+		mb = service.setBeanDelete(mb);
+		if(mb.getResult().equals("1")) {
+			return "redirect:adminMemberList";
+		}
+		else {
+			model.addAttribute("msg", mb.getMessage());
+			return "/team_project/tour/common/msg";
+		}
+	}
+	
+	// 전체 회원 리스트(ajax 통신)
+	@RequestMapping(value = "adminMemberList", method = RequestMethod.POST)
+	@ResponseBody
+	public DataTableBean adminMemberList(@RequestBody MultiValueMap<String, String> formData, DataTableBean data){
+		//System.out.println("formData : " + formData);
+		
+		
+		// util 서비스를 이용하여 DataTable에 사용할 데이터가공후 (map) 객체로 리턴
+		Map<String, String> map = new HashMap<String, String>();
+	    map = util.getDataTableMpa(formData);
+	    //System.out.println("map : " + map);
+	    // 전체 갯수
+	    int total = 0;
+	    total = service.totalCount(map);
+	    
+	    // 실제 데이터 
+	    List list = null;
+	    list = service.getDataTableList(map);
+
+	    
+	    // 리턴 받을 DataTableBean 세팅
+	    data.setDraw(Integer.parseInt(map.get("draw").toString()));
+	    data.setRecordsFiltered(total);
+	    data.setRecordsTotal(total);
+	    data.setData(list);
+	    return data;
+	}
+
+}
